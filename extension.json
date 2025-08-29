@@ -16,7 +16,7 @@
 	"categories": "PCB",
 	"keywords": ["silkscreen"],
 	"images": {
-		"logo": "./images/log.png"
+		"logo": "./images/logo.png"
 	},
 	"homepage": "https://pro.lceda.cn",
 	"bugs": "https://github.com/easyeda/eext-generate-silkscreen",
