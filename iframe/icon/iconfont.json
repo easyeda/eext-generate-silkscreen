@@ -1,0 +1,72 @@
+{
+	"id": "4949351",
+	"name": "EDA插件",
+	"font_family": "iconfont",
+	"css_prefix_text": "icon-",
+	"description": "",
+	"glyphs": [
+		{
+			"icon_id": "44338356",
+			"name": "adjustment",
+			"font_class": "adjustment",
+			"unicode": "e604",
+			"unicode_decimal": 58884
+		},
+		{
+			"icon_id": "44338702",
+			"name": "data-display",
+			"font_class": "data-display",
+			"unicode": "e63e",
+			"unicode_decimal": 58942
+		},
+		{
+			"icon_id": "44339037",
+			"name": "logo-github",
+			"font_class": "logo-github",
+			"unicode": "e687",
+			"unicode_decimal": 59015
+		},
+		{
+			"icon_id": "44339281",
+			"name": "serenity",
+			"font_class": "serenity",
+			"unicode": "e6c9",
+			"unicode_decimal": 59081
+		},
+		{
+			"icon_id": "44339305",
+			"name": "sinister-smile",
+			"font_class": "sinister-smile",
+			"unicode": "e6d0",
+			"unicode_decimal": 59088
+		},
+		{
+			"icon_id": "44339312",
+			"name": "smile",
+			"font_class": "smile",
+			"unicode": "e6d3",
+			"unicode_decimal": 59091
+		},
+		{
+			"icon_id": "44339313",
+			"name": "sneer",
+			"font_class": "sneer",
+			"unicode": "e6d4",
+			"unicode_decimal": 59092
+		},
+		{
+			"icon_id": "44339324",
+			"name": "speechless",
+			"font_class": "speechless",
+			"unicode": "e6d7",
+			"unicode_decimal": 59095
+		},
+		{
+			"icon_id": "44339449",
+			"name": "uncomfortable-1",
+			"font_class": "uncomfortable-1",
+			"unicode": "e6fd",
+			"unicode_decimal": 59133
+		}
+	]
+}

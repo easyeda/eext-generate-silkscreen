@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>焊盘生成丝印</title>
+		<link rel="stylesheet" href="/iframe/css/NewSilkscreen.css" />
+	</head>
+	<body>
+		<div class="container">
+			<div class="form-group type">
+				<label class="label" title="决定生成丝印的类型">丝印类型</label>
+				<div class="img_tab"><input type="checkbox" id="type-img" checked /><span>图片</span></div>
+				<div class="text_tab"><input type="checkbox" id="type-text" /><span>文字</span></div>
+			</div>
+			<div class="form-group">
+				<label class="label" title="如你所见的字体选项">丝印字体</label>
+				<select class="select-input" id="fontSelect">
+					<option value="黑体" selected>黑体</option>
+					<option value="宋体">宋体</option>
+					<option value="微软雅黑">微软雅黑</option>
+				</select>
+			</div>
+			<div class="form-group">
+				<label class="label" title="决定生成丝印的高度">丝印高度</label>
+				<div class="input-group">
+					<input type="number" id="height-input" class="number-input" value="40" min="0" />
+					<select class="unit-select" id="unit-select">
+						<option value="mil" selected>mil</option>
+						<option value="mm">mm</option>
+					</select>
+				</div>
+			</div>
+			<div class="form-group">
+				<label class="label" title="丝印生成的角度(逆时针)">丝印角度</label>
+				<select class="select-input" id="angle-select">
+					<option value="0" selected>0°</option>
+					<option value="90">90°</option>
+					<option value="180">180°</option>
+					<option value="270">270°</option>
+				</select>
+			</div>
+
+			<div class="form-group negation">
+				<input type="checkbox" name="是否生成反相图片" id="negation" />
+				<label class="negation-label" title="是否生成反相图片">生成反相丝印</label>
+			</div>
+			<div class="hint_word">提示：生成前请先选中焊盘，点击按钮后框选需要放置的区域开始放置。</div>
+			<div class="controls">
+				<button class="generate-btn">
+					<svg
+						t="1755935343338"
+						class="icon"
+						viewBox="0 0 1024 1024"
+						version="1.1"
+						xmlns="http://www.w3.org/2000/svg"
+						p-id="1405"
+						width="16"
+						height="16"
+					>
+						<path
+							d="M512 70.8c-206.5 0-373.9 167.4-373.9 373.9 0 91.69 34.3 181.4 95.54 249.64 29.87 33.28 63.49 63.48 94.93 95.31l80.05 81.04c22.79 23.07 44.58 49.78 69.61 70.47 0 0 36 29.81 74.75-4.36L690.3 796.27c35.75-36.59 74.67-71.54 107.65-110.65 28.5-33.8 50.96-72.62 65.94-114.22 14.61-40.56 22.01-83.6 22.01-126.7 0-206.5-167.4-373.9-373.9-373.9z m233.13 458.37c-9.94 27.4-24.85 52.97-43.77 75.23-21.89 25.76-47.73 48.78-71.46 72.88l-91.15 92.56c-25.72 22.5-49.62 2.87-49.62 2.87-16.61-13.63-31.08-31.22-46.2-46.41l-53.14-53.38c-20.87-20.97-43.19-40.85-63.02-62.78-40.65-44.95-63.42-104.04-63.42-164.43 0-136.01 111.12-246.27 248.2-246.27s248.2 110.26 248.2 246.27c-0.01 28.4-4.93 56.75-14.62 83.46z"
+							p-id="1406"
+							fill="#ffffff"
+						></path>
+						<path d="M512 445.89m-93.99 0a93.99 93.99 0 1 0 187.98 0 93.99 93.99 0 1 0-187.98 0Z" p-id="1407" fill="#ffffff"></path>
+					</svg>
+					生成丝印
+				</button>
+			</div>
+			<!-- 			<div class="switch-group">
+				<span class="switch-label" title="将会按上一次框选生成的相对位置生成，请点击焊盘生成">一键生成</span>
+				<label class="switch">
+					<input type="checkbox" class="switch-input" />
+					<span class="switch-slider"></span>
+				</label>
+			</div> -->
+		</div>
+		<div class="hint">
+			<h4>框选状态已开启</h4>
+			<h5>请<span>过滤掉除'焊盘'外的所有元素</span>后再进行框选,以免出现预期之外的错误。</h5>
+		</div>
+
+		<script>
+			// 版本检查
+			function compareVersions(version, version_required) {
+				const v1Parts = version.split('.').map(Number);
+				const v2Parts = version_required.split('.').map(Number);
+				const maxLength = Math.max(v1Parts.length, v2Parts.length);
+				for (let i = 0; i < maxLength; i++) {
+					// 如果其中一个版本号的部分不存在，则视为0
+					const v1 = v1Parts[i] || 0;
+					const v2 = v2Parts[i] || 0;
+					// 比较两个版本号的部分
+					if (v1 > v2) {
+						return false; // version > version_required
+					} else if (v1 < v2) {
+						return true; // version < version_required
+					}
+				}
+			}
+			const version = eda.sys_Environment.getEditorCurrentVersion();
+			const requiredVersion = `2.2.40`;
+			document.addEventListener('DOMContentLoaded', () => {
+				if (compareVersions(version, requiredVersion)) {
+					eda.sys_Message.showToastMessage(
+						`您的版本为${eda.sys_Environment.getEditorCurrentVersion()}，至少需要${requiredVersion}才能正常运行该脚本，请及时更新EDA版本`,
+						'warn',
+						3,
+					);
+				}
+			});
+		</script>
+		<script src="/iframe/js/NewSilkscreen.js"></script>
+		<script src="/iframe/js/jquery.min.js"></script>
+	</body>
+</html>

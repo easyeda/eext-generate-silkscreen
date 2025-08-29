@@ -1,0 +1,59 @@
+{
+	"name": "generate-silkscreen",
+	"uuid": "d8a6a78ac9b947ffb6995d0d55b27ede",
+	"displayName": "生成丝印",
+	"description": "通过焊盘的网络名批量快速生成图片丝印或文本丝印",
+	"version": "1.1.0",
+	"publisher": "support@lceda.cn",
+	"engines": {
+		"eda": "^2.2.30"
+	},
+	"license": "Apache-2.0",
+	"repository": {
+		"type": "gitee",
+		"url": "https://github.com/easyeda/eext-generate-silkscreen.git"
+	},
+	"categories": "PCB",
+	"keywords": ["silkscreen"],
+	"images": {
+		"logo": "./images/log.png"
+	},
+	"homepage": "https://pro.lceda.cn",
+	"bugs": "https://github.com/easyeda/eext-generate-silkscreen",
+	"activationEvents": {},
+	"entry": "./dist/index",
+	"dependentExtensions": {},
+	"headerMenus": {
+		"pcb": [
+			{
+				"id": "Silkscreen",
+				"title": "生成丝印",
+				"menuItems": [
+					{
+						"id": "silkscreen_printing",
+						"title": "生成文字丝印...",
+						"registerFn": "silkscreen"
+					},
+					{
+						"id": "NewSilkscreen_printing",
+						"title": "生成焊盘丝印...",
+						"registerFn": "NewSilkscreen"
+					}
+				]
+			}
+		],
+		"footprint": [
+			{
+				"id": "Silkscreen",
+				"title": "生成丝印",
+				"menuItems": [
+					{
+						"id": "silkscreen_printing",
+						"title": "生成文字丝印",
+						"registerFn": "silkscreen"
+					}
+				]
+			}
+		]
+	}
+}

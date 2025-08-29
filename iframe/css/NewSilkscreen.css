@@ -1,0 +1,305 @@
+* {
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	font-family: Arial, sans-serif;
+}
+
+.container {
+	width: 208px;
+	height: 236px;
+	background-color: #ffffff;
+	border-radius: 8px;
+	padding: 5px 6px;
+	box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+	position: relative;
+}
+
+.title {
+	text-align: center;
+	margin-bottom: 15px;
+	color: #333;
+	font-size: 16px;
+}
+
+.form-group {
+	width: 172px;
+	display: flex;
+	align-items: center;
+	margin-bottom: 10px;
+	justify-content: space-between;
+}
+.label-angle {
+	width: 51px;
+	font-size: 14px;
+	text-align: right;
+	color: #000;
+	padding-right: 10px;
+}
+.label-type {
+	width: 51px;
+	font-size: 14px;
+	text-align: right;
+	color: #000;
+	padding-right: 10px;
+}
+.label {
+	width: 72px;
+	font-size: 14px;
+	text-align: right;
+	color: #000;
+	padding-right: 10px;
+}
+.input-group {
+	box-sizing: border-box;
+	width: 90px;
+	height: 22px;
+	border: 1px solid #cccccc;
+	border-radius: 4px;
+	background-color: white;
+	align-items: center;
+	display: flex;
+	justify-content: space-between;
+}
+.number-input {
+	width: 46px;
+	height: 100%;
+	background-color: #ffffff;
+	text-align: center;
+	border: 0;
+	font-size: 12px;
+	outline: none;
+	box-sizing: border-box;
+	border-radius: 4px;
+}
+
+.unit-select {
+	box-sizing: border-box;
+	width: 32px;
+	appearance: none;
+	text-align: center;
+	height: 100%;
+	border: 0;
+	outline: none;
+	background-color: #ffffff;
+	border-left: 1px solid #d8dbe0;
+	border-radius: 0 3px 3px 0;
+}
+/* .unit {
+    margin-left: 5px;
+    font-size: 14px;
+    color: #000;
+} */
+
+.select-input {
+	width: 90px;
+	height: 22px;
+	padding: 0 8px;
+	border: 1px solid #ccc;
+	border-radius: 4px;
+	font-size: 14px;
+	background-color: white;
+	outline: none;
+}
+
+.controls {
+	padding-top: 10px;
+	display: flex;
+	justify-content: flex-end;
+}
+
+.generate-btn {
+	width: 96px;
+	height: 24px;
+	background-color: hsl(210, 100%, 56%);
+	color: white;
+	border: none;
+	border-radius: 5px;
+	font-size: 16px;
+	cursor: pointer;
+}
+
+.generate-btn:hover {
+	background-color: #0b7dda;
+}
+.state {
+	width: 80px;
+	height: 24px;
+	color: white;
+	border: none;
+	border-radius: 5px;
+	font-size: 16px;
+	background-color: #000;
+	cursor: default;
+}
+
+.switch-group {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 30px;
+}
+
+.switch-label {
+	font-size: 14px;
+	color: #000;
+}
+
+.switch {
+	position: relative;
+	display: inline-block;
+	width: 40px;
+	height: 20px;
+}
+
+.switch-input {
+	opacity: 0;
+	width: 0;
+	height: 0;
+}
+
+.switch-slider {
+	position: absolute;
+	cursor: pointer;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background-color: #ccc;
+	transition: 0.4s;
+	border-radius: 20px;
+}
+
+.switch-slider:before {
+	position: absolute;
+	content: '';
+	height: 16px;
+	width: 16px;
+	left: 2px;
+	bottom: 2px;
+	background-color: white;
+	transition: 0.4s;
+	border-radius: 50%;
+}
+
+.switch-input:checked + .switch-slider {
+	background-color: #1e90ff;
+}
+
+.switch-input:checked + .switch-slider:before {
+	transform: translateX(20px);
+}
+.hint_word {
+	font-size: 12px;
+}
+.hint {
+	display: none;
+	width: 170px;
+	height: 90px;
+	background-color: #333;
+	opacity: 0.8;
+	position: absolute;
+	text-align: center;
+	flex-wrap: wrap;
+	z-index: 1;
+	border-radius: 3px;
+	top: 30px;
+	left: 15px;
+	color: #f0f0f0;
+	justify-content: center;
+	align-content: center;
+}
+.border {
+	width: 170px;
+	padding: 0 20px;
+	color: #000;
+}
+#nav {
+	position: relative;
+	border: none;
+	border-radius: 10em;
+	display: flex;
+	justify-content: center;
+	list-style: none;
+	background: #f0f0f0;
+	box-shadow: 0 0 10px black;
+	padding: 2px;
+}
+#nav li a {
+	position: relative;
+	padding: 3px 10px;
+	font: 16px '微软雅黑';
+	border: none;
+	outline: none;
+	color: #0b7dda;
+	display: inline-block;
+	text-decoration: none;
+	z-index: 3;
+}
+.slide1,
+.slide2 {
+	position: absolute;
+	display: inline-block;
+	height: 20px;
+	border-radius: 10em;
+	transition: all 0.6s cubic-bezier(0.23, 1, 0.32, 1.05);
+}
+.slide1 {
+	background-color: #1e90ff;
+	z-index: 2;
+}
+.slide2 {
+	opacity: 0;
+	background-color: rgb(30, 144, 255, 0.5);
+	z-index: 1;
+	box-shadow: 0 0 20px #333 inset;
+}
+.squeeze {
+	transform: scale(0.9);
+}
+.type {
+	display: flex;
+}
+.img_tab,
+.text_tab {
+	font-size: 14px;
+}
+.img_tab {
+	margin-right: 10px;
+}
+
+.img_tab > span,
+.text_tab > span {
+	padding-left: 4px;
+	vertical-align: middle;
+}
+.negation-label {
+	font-size: 14px;
+	padding-left: 15px;
+}
+/*复选框未勾选前的样式*/
+#type-img[type='checkbox'],
+#type-text[type='checkbox'] {
+	appearance: none; /*取消默认的复选框样式*/
+	/*重新写一个复选框圆角样式*/
+	width: 13px; /*设置方形宽度为20px*/
+	height: 13px; /*设置方形高度为20px*/
+	border: 1px solid rgb(39, 120, 250); /*设置边框样式*/
+	border-radius: 50%; /*将方形的边框改为圆形*/
+	vertical-align: middle;
+}
+
+/*复选框选择后的样式*/
+#type-img[type='checkbox']:checked,
+#type-text[type='checkbox']:checked {
+	background-color: rgb(39, 120, 250);
+}
+.negation {
+	justify-content: flex-start;
+}
+#negation {
+	margin-left: 15px;
+}
+.hint > h5 > span {
+	color: rgb(255, 96, 96);
+}

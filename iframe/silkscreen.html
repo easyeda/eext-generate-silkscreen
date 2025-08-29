@@ -1,0 +1,95 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="UTF-8" />
+		<title>文字生成丝印</title>
+		<link rel="stylesheet" href="/iframe/css/silkscreen.css" />
+	</head>
+	<body>
+		<div class="container">
+			<div class="head_box">
+				<div class="net">
+					<span class="label">文本：</span>
+					<input type="text" id="input-net" placeholder="请输入字符" />
+				</div>
+			</div>
+			<div class="slider-container">
+				<span class="attribute silkscreenHeight">丝印高度：</span>
+				<input type="range" id="customSlider" min="35" max="100" value="加载中" class="custom-slider" />
+				<span class="slider-value" id="sliderHeight">加载中..</span>
+			</div>
+			<div class="direction-container">
+				<div class="custom-select">
+					<span class="attribute">旋转角度：</span>
+					<select name="direction" id="direction-select">
+						<option value="0">0°</option>
+						<option value="90">90°</option>
+						<option value="180">180°</option>
+						<option value="270">270°</option>
+					</select>
+				</div>
+				<div class="stencil-layer">
+					<span>生成层:</span>
+					<select id="stencil-layer">
+						<option value="3">顶层丝印</option>
+						<option value="4">底层丝印</option>
+					</select>
+				</div>
+			</div>
+			<div class="invert">
+				<div class="invert-switch">
+					<span id="invert-span">反相开关：</span>
+					<label class="switch" id="invert">
+						<input type="checkbox" id="invert-switch" />
+						<span class="slider round"></span>
+					</label>
+				</div>
+				<div class="font">
+					<span>字体:</span>
+					<select id="font-select">
+						<option value="Arial">Arial</option>
+					</select>
+				</div>
+			</div>
+			<div class="controls">
+				<button class="generate-button">生成</button>
+			</div>
+		</div>
+		<div class="tips">
+			<h6>请在过滤中去掉区域类型元素后再进行框选</h6>
+			<span>请框选生成区域</span>
+		</div>
+
+		<script>
+			// 版本检查
+			function compareVersions(version, version_required) {
+				const v1Parts = version.split('.').map(Number);
+				const v2Parts = version_required.split('.').map(Number);
+				const maxLength = Math.max(v1Parts.length, v2Parts.length);
+				for (let i = 0; i < maxLength; i++) {
+					// 如果其中一个版本号的部分不存在，则视为0
+					const v1 = v1Parts[i] || 0;
+					const v2 = v2Parts[i] || 0;
+					// 比较两个版本号的部分
+					if (v1 > v2) {
+						return false; // version > version_required
+					} else if (v1 < v2) {
+						return true; // version < version_required
+					}
+				}
+			}
+			const version = eda.sys_Environment.getEditorCurrentVersion();
+			const requiredVersion = `2.2.40`;
+			document.addEventListener('DOMContentLoaded', () => {
+				if (compareVersions(version, requiredVersion)) {
+					eda.sys_Message.showToastMessage(
+						`您的版本为${eda.sys_Environment.getEditorCurrentVersion()}，至少需要${requiredVersion}才能正常运行该脚本，请及时更新EDA版本`,
+						'warn',
+						3,
+					);
+				}
+			});
+		</script>
+		<script src="/iframe/js/silkscreen.js" defer="search_input"></script>
+	</body>
+</html>
