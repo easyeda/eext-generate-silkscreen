@@ -40,12 +40,20 @@
 					<option value="270">270°</option>
 				</select>
 			</div>
-
+			<div class="form-group">
+				<label class="label" title="丝印生成相对焊盘的位置">丝印位置</label>
+				<select class="select-input" id="place-select">
+					<option value="上" selected>上</option>
+					<option value="下">下</option>
+					<option value="左">左</option>
+					<option value="右">右</option>
+				</select>
+			</div>
 			<div class="form-group negation">
 				<input type="checkbox" name="是否生成反相图片" id="negation" />
 				<label class="negation-label" title="是否生成反相图片">生成反相丝印</label>
 			</div>
-			<div class="hint_word">提示：生成前请先选中焊盘，点击按钮后框选需要放置的区域开始放置。</div>
+
 			<div class="controls">
 				<button class="generate-btn">
 					<svg

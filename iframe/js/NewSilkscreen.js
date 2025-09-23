@@ -19,6 +19,7 @@ if (JSON.parse(localStorage.getItem('default_set'))) {
 		'default_invert': false, // 默认反向功能
 		'heightValue': 40, // 默认高度
 		'default_unit': 'mil',
+		'default_place': '右',
 	};
 	localStorage.setItem('default_set', JSON.stringify(default_set));
 }
@@ -31,6 +32,7 @@ const height = document.querySelector('.number-input');
 const unit = document.querySelector('.unit-select');
 const angle = document.getElementById('angle-select');
 const font = document.getElementById('fontSelect');
+const place = document.getElementById('place-select');
 /* const targetLayer = document.querySelectorAll('.select-input')[2]; */
 const invert = document.getElementById('negation');
 const fontSelect = document.getElementById('fontSelect');
@@ -53,6 +55,7 @@ window.onload = function () {
 	angle.value = default_set.default_direction; // 角度
 	font.value = default_set.default_typeface; // 字体
 	invert.checked = default_set.default_invert; // 反相
+	place.value = default_set.default_place; // 位置
 };
 
 height.addEventListener('input', () => {
@@ -110,6 +113,11 @@ invert.addEventListener('click', () => {
 	console.log('是否反向:', default_set.default_invert);
 	localStorage.setItem('default_set', JSON.stringify(default_set));
 });
+place.addEventListener('change', () => {
+	default_set.default_place = place.value;
+	console.log('方向', default_set.default_place);
+	localStorage.setItem('default_set', JSON.stringify(default_set));
+});
 typeImg.addEventListener('click', () => {
 	console.log('图形生成选项：', typeImg.checked);
 	if (typeImg.checked === true) {
@@ -133,12 +141,14 @@ typeText.addEventListener('click', () => {
 (async function getfont() {
 	const sys_font = await eda.sys_FontManager.getFontsList();
 	console.log(sys_font);
+	const new_sys_font = sys_font.filter((item) => item !== 'default');
+	console.log(new_sys_font);
 	// 确保sys_font获取到值
-	if (sys_font) {
+	if (new_sys_font) {
 		// 清空现有的选项（如果有）
 		font.innerHTML = '';
 		// 遍历 sys_font 数组
-		sys_font.forEach((font) => {
+		new_sys_font.forEach((font) => {
 			// 创建一个新的 <option> 元素
 			const option = document.createElement('option');
 			// 设置 <option> 的 value 和 textContent
@@ -253,7 +263,7 @@ function getTextWidth(str, TextHeight) {
  * @returns max-数组的最大值
  * @returns k-最大值对应的索引
  */
-function ArrayMax(arr) {
+/* function ArrayMax(arr) {
 	let max = 0;
 	let k = 0;
 	for (let i = 0; i < arr.length; i++) {
@@ -263,70 +273,42 @@ function ArrayMax(arr) {
 		}
 	}
 	return { max: max, k: k };
-}
+} */
 /**
  * 取得全部焊盘数量对应的坐标中心点
- * @param  mouse-框选时第一次鼠标点击的坐标
- * @param  mouse1-框选时第一次鼠标松开的坐标
+ * @param  place-设定的相对方位
  * @param  bonding-焊盘数据
+ * @param  height-字高 #单位mil
  * @returns num-包含全部焊盘对应的中心点坐标
  */
-function getMid(mouse, mouse1, bonding, height) {
+function getMid(place, bonding) {
 	let num = [];
-	const midMouseX = (mouse.x + mouse1.x) / 2;
-	const midMouseY = (mouse.y + mouse1.y) / 2;
-	let bondingMidX = 0;
-	let bondingMidY = 0;
-	if (bonding.length > 1) {
-		bondingMidX = (bonding[0].x + bonding[bonding.length - 1].x) / 2;
-		bondingMidY = (bonding[0].y + bonding[bonding.length - 1].y) / 2;
-	} else if (bonding.length === 1) {
-		bondingMidX = bonding[0].x;
-		bondingMidY = bonding[0].y;
-	} else {
-		console.error('未获取到焊盘数据');
-		return 0;
+	let place_count = [];
+	switch (place) {
+		case '上':
+			place_count = [0, 1];
+			break;
+		case '下':
+			place_count = [0, -1];
+			break;
+		case '左':
+			place_count = [-1, 0];
+			break;
+		case '右':
+			place_count = [1, 0];
+			break;
+		default:
+			place_count = [0, 0];
+			break;
+	}
+	for (mid of bonding) {
+		let x = mid.x + place_count[0] * 78.7;
+		let y = mid.y + place_count[1] * 78.7;
+		num.push({ x, y });
 	}
 
-	let directional_sign = 0;
-	let relative_position = 0;
-	if (Math.abs(midMouseX - bondingMidX) >= Math.abs(midMouseY - bondingMidY)) {
-		directional_sign = 1;
-		relative_position = mouse.x > mouse1.x ? 1 : -1;
-		console.log('检测到目标位置为水平方向对齐焊盘,directional_sign=', directional_sign);
-	} else if (Math.abs(midMouseX - bondingMidX) < Math.abs(midMouseY - bondingMidY)) {
-		directional_sign = 2;
-		relative_position = mouse.x > mouse1.x ? 1 : -1;
-		console.log('检测到目标位置为垂直方向对齐焊盘,directional_sign=', directional_sign);
-	} else {
-		console.error('焊盘对对齐参数计算异常');
-		return 0;
-	}
-	let ArrayWidth = [];
-	for (let item of bonding) {
-		ArrayWidth.push(getTextWidth(item.net, height));
-	}
-	const paddingMax = ArrayMax(ArrayWidth);
-	console.log('ArrayWidth', ArrayWidth, 'paddingMax', paddingMax);
+	// 计算焊盘中心点坐标
 
-	if (directional_sign === 1) {
-		// 水平方向对齐焊盘
-		for (let i = 0; i < bonding.length; i++) {
-			num[i] = {};
-			num[i].x = bonding[i].x + (midMouseX - bondingMidX) + (relative_position * (paddingMax.max - ArrayWidth[i])) / 2;
-			num[i].y = bonding[i].y;
-		}
-	} else if (directional_sign === 2) {
-		// 垂直方向对齐焊盘
-		for (let i = 0; i < bonding.length; i++) {
-			num[i] = {};
-			num[i].x = bonding[i].x;
-			num[i].y = bonding[i].y + (midMouseY - bondingMidY) + (relative_position * (paddingMax.max - ArrayWidth[i])) / 2;
-		}
-	} else {
-		console.error('焊盘对对齐参数计算异常,directional_sign', directional_sign);
-		return 0;
-	}
 	return num;
 }
 
@@ -431,107 +413,80 @@ async function getSilkscreen() {
 }
 setInterval(getSilkscreen, 10); // 循环获取图元参数
 
-generateBtn.addEventListener('click', async () => {
-	// 点击生成按钮后的动作，获取的图元必须处于高亮选择状态
-	const bonding = getAll_primitives;
-	console.log('生成事件被触发', bonding);
-	if (/* !oneClickSwitch.checked && */ bonding.length > 0) {
-		// 一键生成功能未开启
-		let MouseNum = 0; // 点击次数
-		let Mouse = []; // 点击时的坐标
-		// 获取图片
-		eda.sys_Message.showToastMessage('请框选生成范围', 'info', 3);
-		const result = bonding
-			.map((str) => {
-				match = str.primitiveId.match(/^[a-z]{1,2}[0-9]{1,4}/);
-				/* console.log(match); */
-				// 如果匹配成功返回捕获组内容，否则返回null
-				return match ? match[0] : null;
-			})
-			.filter((item) => item !== null);
-		if (result.length === 0) {
-			console.error('未获取到焊盘父元素ID');
-			eda.sys_Message.showToastMessage('未获取到焊盘父元素ID', 'error', 3);
-			return;
-		}
-		console.log(result);
-		const allDevices = await eda.pcb_PrimitiveComponent.get(result); // 获取焊盘对应的器件信息
-		console.log(allDevices);
-
-		eda.pcb_Event.addMouseEventListener(
-			'generate',
-			'selected',
-			async () => {
-				Mouse[MouseNum] = await eda.pcb_SelectControl.getCurrentMousePosition();
-				if (Mouse.length === 1) MouseNum++;
-				if (Mouse.length === 2) {
-					console.log(Mouse);
-					eda.pcb_Event.removeEventListener(`generate`); // 完成后移除事件
-					const centralPoint = getMid(Mouse[0], Mouse[1], bonding, default_set.heightValue);
-					console.log(centralPoint);
-					for (let i = 0; i < bonding.length; i++) {
-						if (bonding[i].net === '') continue; // 去掉空焊盘
-						default_set.default_tier = allDevices[i].layer === 1 ? 3 : 4; // 3顶层丝印层，4底层丝印层
-						img = stringToImage(`${bonding[i].net}`, default_set.heightValue);
-						console.log(
-							'Mouse[0]:',
-							Mouse[0],
-							'Mouse[1]:',
-							Mouse[1],
-							'bonding:',
-							bonding[i].x,
-							bonding[i].y,
-							'宽：',
-							textWidth,
-							'高:',
-							default_set.heightValue,
-							'角度:',
-							default_set.default_direction,
-						);
-						let Origin = CalcOrigin(
-							// 坐标计算
-							centralPoint[i].x,
-							centralPoint[i].y,
-							bonding[i].x,
-							bonding[i].y,
-							textWidth,
-							default_set.heightValue,
-							default_set.default_direction,
-							Number(default_set.default_tier),
-						);
-						offset = Origin[1];
-						/* 						console.log('起始点Origin[0]:', Origin[0]);
+generateBtn.addEventListener(
+	'click',
+	async () => {
+		// 点击生成按钮后的动作，获取的图元必须处于高亮选择状态
+		const bonding = getAll_primitives;
+		console.log('生成事件被触发', bonding);
+		if (/* !oneClickSwitch.checked && */ bonding.length > 0) {
+			// 一键生成功能未开启
+			// 获取图片
+			/* eda.sys_Message.showToastMessage('请框选生成范围', 'info', 3); */
+			const result = bonding
+				.map((str) => {
+					match = str.primitiveId.match(/^[a-z]{1,2}[0-9]{1,4}/);
+					/* console.log(match); */
+					// 如果匹配成功返回捕获组内容，否则返回null
+					return match ? match[0] : null;
+				})
+				.filter((item) => item !== null);
+			if (result.length === 0) {
+				console.error('未获取到焊盘父元素ID');
+				eda.sys_Message.showToastMessage('未获取到焊盘父元素ID', 'error', 3);
+				return;
+			}
+			console.log(result);
+			const allDevices = await eda.pcb_PrimitiveComponent.get(result); // 获取焊盘对应的器件信息
+			console.log(allDevices);
+			const centralPoint = getMid(default_set.default_place, bonding); // 待修改，根据鼠标位置计算生成图片的中心点坐标
+			console.log(centralPoint);
+			for (let i = 0; i < bonding.length; i++) {
+				if (bonding[i].net === '') continue; // 去掉空焊盘
+				default_set.default_tier = allDevices[i].layer === 1 ? 3 : 4; // 3顶层丝印层，4底层丝印层
+				img = stringToImage(`${bonding[i].net}`, default_set.heightValue);
+				let Origin = CalcOrigin(
+					// 坐标计算
+					centralPoint[i].x,
+					centralPoint[i].y,
+					bonding[i].x,
+					bonding[i].y,
+					textWidth,
+					default_set.heightValue,
+					default_set.default_direction,
+					Number(default_set.default_tier),
+				);
+				offset = Origin[1];
+				/* 		console.log('起始点Origin[0]:', Origin[0]);
 						console.log('偏移量Origin[1]:', Origin[1]); */
-						const imageBlob = base64ToBlob(img.src, 'image/png'); // 将图片格式从base64转换为blob
-						const edaImage = await eda.pcb_MathPolygon.convertImageToComplexPolygon(
-							// 将blob转为复杂多边形对象
-							imageBlob, // 图像Blob文件
-							100, // 图像宽度
-							35, // 图像高度
-							0.3, // 容差 0-1
-							0.9, // 简化 0-1
-							1, // 平滑 0-1.33
-							2, // 祛斑 0-5
-							false, // 是否白色背景
-							default_set.default_invert, // 是否反向
-						);
-						eda.pcb_PrimitiveImage.create(
-							// 生成
-							Origin[0].X, // X坐标
-							Origin[0].Y, // Y坐标
-							edaImage,
-							Number(default_set.default_tier), // 目标层
-							textWidth, // 宽度
-							default_set.heightValue, // 高度
-							default_set.default_direction, // 旋转角度
-							false, // 是否镜像
-							false, // 是否锁定
-						);
-					}
-				}
-			},
-			false, // 不只执行一次
-		);
-	}
-});
+				const imageBlob = base64ToBlob(img.src, 'image/png'); // 将图片格式从base64转换为blob
+				const edaImage = await eda.pcb_MathPolygon.convertImageToComplexPolygon(
+					// 将blob转为复杂多边形对象
+					imageBlob, // 图像Blob文件
+					textWidth, // 图像宽度
+					default_set.heightValue, // 图像高度
+					0.3, // 容差 0-1
+					0.9, // 简化 0-1
+					1, // 平滑 0-1.33
+					2, // 祛斑 0-5
+					false, // 是否白色背景
+					default_set.default_invert, // 是否反向
+				);
+				eda.pcb_PrimitiveImage.create(
+					// 生成
+					Origin[0].X, // X坐标
+					Origin[0].Y, // Y坐标
+					edaImage,
+					Number(default_set.default_tier), // 目标层
+					textWidth, // 宽度
+					default_set.heightValue, // 高度
+					default_set.default_direction, // 旋转角度
+					false, // 是否镜像
+					false, // 是否锁定
+				);
+			}
+		}
+	},
+	false, // 不只执行一次
+);
 
