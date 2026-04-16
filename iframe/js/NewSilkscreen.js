@@ -302,8 +302,10 @@ function getMid(place, bonding) {
 			break;
 	}
 	for (mid of bonding) {
-		let x = mid.x + place_count[0] * 78.7;
-		let y = mid.y + place_count[1] * 78.7;
+		let mx = mid.x !== undefined ? mid.x : mid.getState_X();
+		let my = mid.y !== undefined ? mid.y : mid.getState_Y();
+		let x = mx + place_count[0] * 78.7;
+		let y = my + place_count[1] * 78.7;
 		num.push({ x, y });
 	}
 
@@ -389,104 +391,119 @@ oneClickSwitch.addEventListener('click', () => {
 let img;
 let textWidth = 0;
 
-// 获取全部焊盘的ID
-let AllPrimitive = [];
-(async function get() {
-	AllPrimitive = await eda.pcb_PrimitivePad.getAllPrimitiveId();
-})();
-
-let getAll_primitives = []; // 通过焊盘id获取的焊盘参数
-let getAll_PrimitivesId = []; // 被选择的图元ID
-/* let offset = {}; */
 /**
- * 获取框选中焊盘图元的参数
+ * 获取当前选中的焊盘图元（点击时实时获取，不再依赖轮询）
+ * 通过器件的 getState_Pads() 建立焊盘ID集合，与选中图元取交集
  */
-async function getSilkscreen() {
-	getAll_PrimitivesId = await eda.pcb_SelectControl.getAllSelectedPrimitives_PrimitiveId(); // 获取受选图元ID
-	getClickPrimitiveId = data_filtering(getAll_PrimitivesId, AllPrimitive); // 将过滤后的焊盘id暂存于此
-	getAll_primitives = await eda.pcb_PrimitivePad.get(getClickPrimitiveId);
-	/* 	if (getAll_primitives.length > 0) {
-		bulb.style.backgroundColor = '#07c400';
-	} else {
-		bulb.style.backgroundColor = '#666';
-	} */
+async function getSelectedPads() {
+	const selectedIds = await eda.pcb_SelectControl.getAllSelectedPrimitives_PrimitiveId();
+	if (!selectedIds || selectedIds.length === 0) return [];
+	// 用 getAllPrimitiveId 获取所有焊盘ID
+	const allPadIds = await eda.pcb_PrimitivePad.getAllPrimitiveId();
+	if (!allPadIds || allPadIds.length === 0) return [];
+	const padIdSet = new Set(allPadIds);
+	const selectedPadIds = selectedIds.filter((id) => padIdSet.has(id));
+	if (selectedPadIds.length === 0) return [];
+	const pads = await eda.pcb_PrimitivePad.get(selectedPadIds);
+	return pads || [];
 }
-setInterval(getSilkscreen, 10); // 循环获取图元参数
 
 generateBtn.addEventListener(
 	'click',
 	async () => {
 		// 点击生成按钮后的动作，获取的图元必须处于高亮选择状态
-		const bonding = getAll_primitives;
-		console.log('生成事件被触发', bonding);
-		if (/* !oneClickSwitch.checked && */ bonding.length > 0) {
-			// 一键生成功能未开启
-			// 获取图片
-			/* eda.sys_Message.showToastMessage('请框选生成范围', 'info', 3); */
-			const result = bonding
-				.map((str) => {
-					match = str.primitiveId.match(/^[a-z]{1,2}[0-9]{1,4}/);
-					/* console.log(match); */
-					// 如果匹配成功返回捕获组内容，否则返回null
-					return match ? match[0] : null;
-				})
-				.filter((item) => item !== null);
-			if (result.length === 0) {
-				console.error('未获取到焊盘父元素ID');
-				eda.sys_Message.showToastMessage('未获取到焊盘父元素ID', 'error', 3);
-				return;
-			}
-			console.log(result);
-			const allDevices = await eda.pcb_PrimitiveComponent.get(result); // 获取焊盘对应的器件信息
-			console.log(allDevices);
-			const centralPoint = getMid(default_set.default_place, bonding); // 待修改，根据鼠标位置计算生成图片的中心点坐标
-			console.log(centralPoint);
-			for (let i = 0; i < bonding.length; i++) {
-				if (bonding[i].net === '') continue; // 去掉空焊盘
-				default_set.default_tier = allDevices[i].layer === 1 ? 3 : 4; // 3顶层丝印层，4底层丝印层
-				img = stringToImage(`${bonding[i].net}`, default_set.heightValue);
-				let Origin = CalcOrigin(
-					// 坐标计算
-					centralPoint[i].x,
-					centralPoint[i].y,
-					bonding[i].x,
-					bonding[i].y,
-					textWidth,
-					default_set.heightValue,
-					default_set.default_direction,
-					Number(default_set.default_tier),
-				);
-				offset = Origin[1];
-				/* 		console.log('起始点Origin[0]:', Origin[0]);
-						console.log('偏移量Origin[1]:', Origin[1]); */
-				const imageBlob = base64ToBlob(img.src, 'image/png'); // 将图片格式从base64转换为blob
-				const edaImage = await eda.pcb_MathPolygon.convertImageToComplexPolygon(
-					// 将blob转为复杂多边形对象
-					imageBlob, // 图像Blob文件
-					textWidth, // 图像宽度
-					default_set.heightValue, // 图像高度
-					0.3, // 容差 0-1
-					0.9, // 简化 0-1
-					1, // 平滑 0-1.33
-					2, // 祛斑 0-5
-					false, // 是否白色背景
-					default_set.default_invert, // 是否反向
-				);
-				eda.pcb_PrimitiveImage.create(
-					// 生成
-					Origin[0].X, // X坐标
-					Origin[0].Y, // Y坐标
-					edaImage,
-					Number(default_set.default_tier), // 目标层
-					textWidth, // 宽度
-					default_set.heightValue, // 高度
-					default_set.default_direction, // 旋转角度
-					false, // 是否镜像
-					false, // 是否锁定
-				);
+		const bonding = await getSelectedPads();
+		console.warn('[GenerateSilkscreen] 生成事件被触发, 选中焊盘数:', bonding.length);
+		if (bonding.length === 0) {
+			eda.sys_Message.showToastMessage('请先选中焊盘后再点击生成', 'warn', 3);
+			return;
+		}
+
+		// 通过 API 获取所有器件，建立焊盘 primitiveId → 器件的映射
+		const allComponents = await eda.pcb_PrimitiveComponent.getAll();
+		const padToComponent = {};
+
+		for (const comp of allComponents) {
+			const compId = comp.getState_PrimitiveId();
+			try {
+				const pins = await eda.pcb_PrimitiveComponent.getAllPinsByPrimitiveId(compId);
+				if (pins && pins.length > 0) {
+					for (const pin of pins) {
+						padToComponent[pin.getState_PrimitiveId()] = comp;
+					}
+				}
+			} catch (e) {
+				console.error('[GenerateSilkscreen] getAllPinsByPrimitiveId异常:', compId, e);
 			}
 		}
-	},
-	false, // 不只执行一次
-);
 
+		const allDevices = [];
+		for (const pad of bonding) {
+			const padId = pad.primitiveId || (typeof pad.getState_PrimitiveId === 'function' ? pad.getState_PrimitiveId() : '');
+			allDevices.push(padToComponent[padId] || null);
+		}
+
+		if (allDevices.every((d) => d === null)) {
+			console.error('[GenerateSilkscreen] 未获取到焊盘父元素ID');
+			eda.sys_Message.showToastMessage('未获取到焊盘父元素ID', 'error', 3);
+			return;
+		}
+
+		const centralPoint = getMid(default_set.default_place, bonding);
+		let skippedCount = 0;
+		for (let i = 0; i < bonding.length; i++) {
+			const padNet = bonding[i].net !== undefined ? bonding[i].net : bonding[i].getState_Net();
+			if (!padNet || padNet === '') {
+				skippedCount++;
+				continue;
+			}
+			if (allDevices[i]) {
+				default_set.default_tier = allDevices[i].getState_Layer() === 1 ? 3 : 4; // 3顶层丝印层，4底层丝印层
+			}
+			const padX = bonding[i].x !== undefined ? bonding[i].x : bonding[i].getState_X();
+			const padY = bonding[i].y !== undefined ? bonding[i].y : bonding[i].getState_Y();
+			img = stringToImage(`${padNet}`, default_set.heightValue);
+			let Origin = CalcOrigin(
+				// 坐标计算
+				centralPoint[i].x,
+				centralPoint[i].y,
+				padX,
+				padY,
+				textWidth,
+				default_set.heightValue,
+				default_set.default_direction,
+				Number(default_set.default_tier),
+			);
+			const imageBlob = base64ToBlob(img.src, 'image/png');
+			const edaImage = await eda.pcb_MathPolygon.convertImageToComplexPolygon(
+				imageBlob,
+				textWidth,
+				default_set.heightValue,
+				0.3,
+				0.9,
+				1,
+				2,
+				false,
+				default_set.default_invert,
+			);
+			eda.pcb_PrimitiveImage.create(
+				Origin[0].X,
+				Origin[0].Y,
+				edaImage,
+				Number(default_set.default_tier),
+				textWidth,
+				default_set.heightValue,
+				default_set.default_direction,
+				false,
+				false,
+			);
+		}
+		if (skippedCount > 0) {
+			eda.sys_Message.showToastMessage(`已跳过 ${skippedCount} 个无网络焊盘`, 'warn', 3);
+		}
+		if (skippedCount === bonding.length) {
+			eda.sys_Message.showToastMessage('所有选中的焊盘均无网络，无法生成丝印', 'error', 3);
+		}
+	},
+	false,
+);
