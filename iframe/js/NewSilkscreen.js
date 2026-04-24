@@ -119,23 +119,20 @@ place.addEventListener('change', () => {
 	localStorage.setItem('default_set', JSON.stringify(default_set));
 });
 typeImg.addEventListener('click', () => {
-	console.log('图形生成选项：', typeImg.checked);
 	if (typeImg.checked === true) {
-		console.log('图形生成选项功能开启');
-	} else if (typeImg.checked === false) {
-		typeImg.checked = true;
+		typeText.checked = false;
+		console.log('切换为图片生成模式');
+	} else {
+		typeImg.checked = true; // 至少保持一个选中
 	}
 });
 typeText.addEventListener('click', () => {
 	if (typeText.checked === true) {
-		typeText.checked = false;
+		typeImg.checked = false;
+		console.log('切换为文字生成模式');
+	} else {
+		typeText.checked = true; // 至少保持一个选中
 	}
-	console.log('文字生成选项：', typeText.checked);
-	eda.sys_Message.showToastMessage(
-		`您的版本为${eda.sys_Environment.getEditorCurrentVersion()}，此版本文字生成插件暂未开放，功能将在版本更新后开放`,
-		'warn',
-		3,
-	);
 });
 // 获取EDA常用文字
 (async function getfont() {
@@ -304,8 +301,30 @@ function getMid(place, bonding) {
 	for (mid of bonding) {
 		let mx = mid.x !== undefined ? mid.x : mid.getState_X();
 		let my = mid.y !== undefined ? mid.y : mid.getState_Y();
-		let x = mx + place_count[0] * 78.7;
-		let y = my + place_count[1] * 78.7;
+		// 通过 getState_Pad() 获取焊盘外形尺寸
+		let padW = 0;
+		let padH = 0;
+		try {
+			const padShape = typeof mid.getState_Pad === 'function' ? mid.getState_Pad() : null;
+			if (padShape && padShape.length >= 3) {
+				// 圆形/长圆形: [type, width, height]
+				// 矩形: [type, width, height, round]
+				// 正多边形: [type, diameter, sides] — type===2 时用 diameter 作为宽高
+				padW = padShape[1] || 0;
+				padH = padShape[0] === 2 ? padShape[1] : padShape[2] || 0;
+			}
+		} catch (e) {
+			padW = 0;
+			padH = 0;
+		}
+		// 偏移量 = 焊盘半宽/半高 + 字高相关间距 + 10mil
+		// 上下方向：文字居中对齐，需要加字高一半
+		// 左右方向：文字横排，宽度通常大于高度，用字高作为估算（约等于单字宽度×1.5~2）
+		let fontHalf = default_set.heightValue / 2;
+		let offsetX = padW > 0 ? padW / 2 + default_set.heightValue + 10 : 78.7 + default_set.heightValue;
+		let offsetY = padH > 0 ? padH / 2 + fontHalf + 10 : 78.7 + fontHalf;
+		let x = mx + place_count[0] * offsetX;
+		let y = my + place_count[1] * offsetY;
 		num.push({ x, y });
 	}
 
@@ -462,41 +481,63 @@ generateBtn.addEventListener(
 			}
 			const padX = bonding[i].x !== undefined ? bonding[i].x : bonding[i].getState_X();
 			const padY = bonding[i].y !== undefined ? bonding[i].y : bonding[i].getState_Y();
-			img = stringToImage(`${padNet}`, default_set.heightValue);
-			let Origin = CalcOrigin(
-				// 坐标计算
-				centralPoint[i].x,
-				centralPoint[i].y,
-				padX,
-				padY,
-				textWidth,
-				default_set.heightValue,
-				default_set.default_direction,
-				Number(default_set.default_tier),
-			);
-			const imageBlob = base64ToBlob(img.src, 'image/png');
-			const edaImage = await eda.pcb_MathPolygon.convertImageToComplexPolygon(
-				imageBlob,
-				textWidth,
-				default_set.heightValue,
-				0.3,
-				0.9,
-				1,
-				2,
-				false,
-				default_set.default_invert,
-			);
-			eda.pcb_PrimitiveImage.create(
-				Origin[0].X,
-				Origin[0].Y,
-				edaImage,
-				Number(default_set.default_tier),
-				textWidth,
-				default_set.heightValue,
-				default_set.default_direction,
-				false,
-				false,
-			);
+
+			if (typeText.checked) {
+				// 文字生成模式：使用 PCB_PrimitiveString API
+				// 使用 centralPoint（已包含焊盘方位偏移 78.7mil）
+				const lineWidth = Math.max(1, Math.round(default_set.heightValue * 0.1)); // 线宽取字高的10%
+				await eda.pcb_PrimitiveString.create(
+					Number(default_set.default_tier), // layer - 层
+					centralPoint[i].x, // x - 坐标 X
+					centralPoint[i].y, // y - 坐标 Y
+					`${padNet}`, // text - 文本内容
+					default_set.default_typeface, // fontFamily - 字体
+					default_set.heightValue, // fontSize - 字号
+					lineWidth, // lineWidth - 线宽
+					5, // alignMode - CENTER 居中对齐
+					Number(default_set.default_direction), // rotation - 旋转角度
+					default_set.default_invert, // reverse - 是否反相
+					0, // expansion - 反相扩展
+					false, // mirror - 是否镜像
+					false, // primitiveLock - 是否锁定
+				);
+			} else {
+				// 图片生成模式：使用原有的图片转换方式
+				img = stringToImage(`${padNet}`, default_set.heightValue);
+				let Origin = CalcOrigin(
+					centralPoint[i].x,
+					centralPoint[i].y,
+					padX,
+					padY,
+					textWidth,
+					default_set.heightValue,
+					default_set.default_direction,
+					Number(default_set.default_tier),
+				);
+				const imageBlob = base64ToBlob(img.src, 'image/png');
+				const edaImage = await eda.pcb_MathPolygon.convertImageToComplexPolygon(
+					imageBlob,
+					textWidth,
+					default_set.heightValue,
+					0.3,
+					0.9,
+					1,
+					2,
+					false,
+					default_set.default_invert,
+				);
+				eda.pcb_PrimitiveImage.create(
+					Origin[0].X,
+					Origin[0].Y,
+					edaImage,
+					Number(default_set.default_tier),
+					textWidth,
+					default_set.heightValue,
+					default_set.default_direction,
+					false,
+					false,
+				);
+			}
 		}
 		if (skippedCount > 0) {
 			eda.sys_Message.showToastMessage(`已跳过 ${skippedCount} 个无网络焊盘`, 'warn', 3);

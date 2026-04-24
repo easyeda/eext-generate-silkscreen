@@ -3,10 +3,10 @@
 	"uuid": "d8a6a78ac9b947ffb6995d0d55b27ede",
 	"displayName": "生成丝印",
 	"description": "通过焊盘的网络名批量快速生成图片丝印或文本丝印",
-	"version": "1.1.5",
+	"version": "1.1.6",
 	"publisher": "JLCEDA",
 	"engines": {
-		"eda": "^2.2.30"
+		"eda": "^3.0.0"
 	},
 	"license": "Apache-2.0",
 	"repository": {
